@@ -14,8 +14,7 @@ constexpr double kMaxVelocity = 150; //RPM
 
 constexpr int kEncoderCount = 360;
 constexpr double kGearRatio = 15.0/36.0; // Encdoer -> Wheel ratio
-constexpr double kEncoderCountsPerRev = kEncoderCount * 1.0 / kGearRatio;
-//constexpr double KRadianPerPulse = 1.0/(4.0*kEncoderCount) * kGearRatio;
+constexpr double kEncoderCodesPerRev = kEncoderCount * 1.0 / kGearRatio;
 
 constexpr int kDefaultProfileSlot = 0;
 const CLParams kLeftClosedLoopParams = CLParams(kDefaultProfileSlot, 2.84 * kGearRatio, 0.75, 0, 0);
@@ -25,19 +24,21 @@ const CLParams  kRightClosedLoopParams = CLParams(kDefaultProfileSlot, 2.84, 0, 
 constexpr double kInvertLeft = 1.0;
 constexpr double kInvertRight = -1.0;
 
-Chassis::Chassis() : Subsystem("Chassis") {
-	printf("[Chassis] Initializing\n");
-	using TalonControlMode = CANTalon::TalonControlMode;
-	using FeedbackDevice = CANTalon::FeedbackDevice;
+constexpr double kMMCruiseVel = 50; // RPM
+constexpr double kMMAccel = 100; // RPM/sec
 
-	// Start out in open loop
-	mode_ = Mode::kOpenLoop;
+constexpr double kCloseLoopRampRate = 240;
+
+Chassis::Chassis() : Subsystem("Chassis") {
+	using FeedbackDevice = CANTalon::FeedbackDevice;
+	printf("[Chassis] Initializing\n");
 
 	// Left Master
 	leftMaster_ = new CANTalon(kLeftDriveMasterId);
 	leftMaster_->SetFeedbackDevice(FeedbackDevice::QuadEncoder);
 	leftMaster_->GetLowLevelObject().SetRevFeedbackSensor(false);
-	leftMaster_->ConfigEncoderCodesPerRev(360*36.0/15.0);
+	leftMaster_->GetLowLevelObject().SetRevMotDuringCloseLoopEn(false);
+	leftMaster_->ConfigEncoderCodesPerRev(kEncoderCodesPerRev);
 
 	leftMaster_->ConfigNominalOutputVoltage(+0.0f, -0.0f);
 	leftMaster_->ConfigPeakOutputVoltage(+12.0f, -12.0f);
@@ -47,16 +48,14 @@ Chassis::Chassis() : Subsystem("Chassis") {
 	leftMaster_->SetP(0.75);
 	leftMaster_->SetI(0);
 	leftMaster_->SetD(0);
+	leftMaster_->SetCloseLoopRampRate(kCloseLoopRampRate);
 
-	leftMaster_->GetLowLevelObject().SetRevMotDuringCloseLoopEn(false);
-
-	leftMaster_->SetMotionMagicCruiseVelocity(50);
-	leftMaster_->SetMotionMagicAcceleration(100);
 
 	rightMaster_ = new CANTalon(kRightDriveMasterId);
 	rightMaster_->SetFeedbackDevice(FeedbackDevice::QuadEncoder);
 	rightMaster_->GetLowLevelObject().SetRevFeedbackSensor(true);
-	rightMaster_->ConfigEncoderCodesPerRev(360*36.0/15.0);
+	rightMaster_->GetLowLevelObject().SetRevMotDuringCloseLoopEn(true);
+	rightMaster_->ConfigEncoderCodesPerRev(kEncoderCodesPerRev);
 
 	rightMaster_->ConfigNominalOutputVoltage(+0.0f, -0.0f);
 	rightMaster_->ConfigPeakOutputVoltage(+12.0f, -12.0f);
@@ -66,15 +65,9 @@ Chassis::Chassis() : Subsystem("Chassis") {
 	rightMaster_->SetP(0.75);
 	rightMaster_->SetI(0);
 	rightMaster_->SetD(0);
+	rightMaster_->SetCloseLoopRampRate(kCloseLoopRampRate);
 
-	rightMaster_->GetLowLevelObject().SetRevMotDuringCloseLoopEn(true);
-
-	rightMaster_->SetMotionMagicCruiseVelocity(50);
-	rightMaster_->SetMotionMagicAcceleration(100);
-
-
-	// Closed loop params
-
+	SetDefaultMotionMagicParams();
 
 	// Add to live window
 	LiveWindow::GetInstance()->AddActuator("Chassis", "Left", leftMaster_);
@@ -108,14 +101,10 @@ void Chassis::SetBreak(bool state) {
 	using Mode = CANTalon::NeutralMode;
 	if(state) {
 		leftMaster_->ConfigNeutralMode(Mode::kNeutralMode_Brake);
-		// leftSlave_->ConfigNeutralMode(Mode::kNeutralMode_Brake);
 		rightMaster_->ConfigNeutralMode(Mode::kNeutralMode_Brake);
-		// rightSlave_->ConfigNeutralMode(Mode::kNeutralMode_Brake);
 	} else {
 		leftMaster_->ConfigNeutralMode(Mode::kNeutralMode_Coast);
-		// leftSlave_->ConfigNeutralMode(Mode::kNeutralMode_Coast);
 		rightMaster_->ConfigNeutralMode(Mode::kNeutralMode_Coast);
-		// rightSlave_->ConfigNeutralMode(Mode::kNeutralMode_Coast);
 	}
 }
 
@@ -136,6 +125,10 @@ void Chassis::SetMotionMagicParamsFeet(double cruiseVel, double accel) {
 	SetMotionMagicParams(cruiseVel, accel);
 }
 
+void Chassis::SetDefaultMotionMagicParams() {
+	SetMotionMagicParams(kMMCruiseVel, kMMAccel);
+}
+
 void Chassis::ZeroEncoders() {
 	leftMaster_->SetPosition(0);
 	rightMaster_->SetPosition(0);
@@ -146,34 +139,23 @@ void Chassis::Stop() {
 }
 
 void Chassis::SetOpenLoop(double left, double right) {
-	if(Mode::kOpenLoop != mode_) {
-		// Not in open loop
-		SetTalonControlMode(CANTalon::TalonControlMode::kThrottleMode);
-	}
+	SetTalonControlMode(CANTalon::TalonControlMode::kThrottleMode);
 
 	left *= kInvertLeft;
 	right *= kInvertRight;
 
 	leftMaster_->Set(left);
 	rightMaster_->Set(right);
-	mode_ = Mode::kOpenLoop;
 }
 
 void Chassis::SetVelocity(double leftVel, double rightVel) {
-	if(Mode::kVelocity != mode_) {
-		// Not in velocity control
-		printf("Setting Control mode\n");
-		SetTalonControlMode(CANTalon::TalonControlMode::kSpeedMode);
-	}
+	SetTalonControlMode(CANTalon::TalonControlMode::kSpeedMode);
 
 	leftVel *= kInvertLeft;
 	rightVel *= kInvertRight;
 
-	printf("Setting left\n");
 	leftMaster_->Set(leftVel);
-	printf("Setting right\n");
 	rightMaster_->Set(rightVel);
-	mode_ = Mode::kVelocity;
 }
 
 void Chassis::SetPrecentVelocity(double left, double right) {
@@ -188,14 +170,10 @@ void Chassis::SetPrecentVelocity(double left, double right) {
  * @param right Setpoint in encoder rotations
  */
 void Chassis::SetMotionMagicSetPoints(double left, double right) {
-	if(Mode::kMotionMagic != mode_) {
-		// Not in motion magic mode
-		SetTalonControlMode(CANTalon::TalonControlMode::kMotionMagicMode);
-	}
+	SetTalonControlMode(CANTalon::TalonControlMode::kMotionMagicMode);
 
 	leftMaster_->Set(left);
 	rightMaster_->Set(right);
-	mode_ = Mode::kMotionMagic;
 }
 
 void Chassis::SetMotionMagicSetPointsFeet(double left, double right) {

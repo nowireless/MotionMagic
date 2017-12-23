@@ -12,7 +12,7 @@ OI::OI() {
 
 	driver_ = new XboxController(0);
 
-	SmartDashboard::PutData("MM 3ft", new DriveDistanceCommand(3.0, 3.0, 6.0, 10));
+	SmartDashboard::PutData("MM 3ft", new DriveDistanceCommand(3.0, 10));
 }
 
 

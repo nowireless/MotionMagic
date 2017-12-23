@@ -6,7 +6,7 @@
 
 class DriveDistanceCommand : public CommandBase {
 public:
-	DriveDistanceCommand(double distance, double velocity, double accel, double timeout);
+	DriveDistanceCommand(double distance, double timeout);
 	void Initialize();
 	void Execute();
 	bool IsFinished();
@@ -14,8 +14,6 @@ public:
 	void Interrupted();
 private:
 	double distance_;
-	double velocity_;
-	double accel_;
 	double timeout_;
 
 	bool isLeftDone;

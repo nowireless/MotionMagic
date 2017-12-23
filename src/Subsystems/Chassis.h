@@ -8,12 +8,6 @@
 
 class Chassis : public Subsystem {
 public:
-	enum Mode {
-		kOpenLoop,
-		kVelocity,
-		kMotionMagic
-	};
-
 	struct ClosedLoopParams {
 		int profileSolt;
 		double f;
@@ -34,6 +28,7 @@ public:
 	void SetBreak(bool state);
 	void SetMotionMagicParams(double cruiseVel, double accel);
 	void SetMotionMagicParamsFeet(double cruiseVel, double accel);
+	void SetDefaultMotionMagicParams();
 	void ZeroEncoders();
 
 	void Stop();
@@ -62,11 +57,7 @@ private:
 	// It's desirable that everything possible under private except
 	// for methods that implement subsystem capabilities
 	CANTalon* leftMaster_;
-	// CANTalon* leftSlave_;
 	CANTalon* rightMaster_;
-	// CANTalon* rightSlave_;
-
-	Mode mode_;
 
 	void SetClosedLoopParams(CANTalon* talon, ClosedLoopParams params);
 	void SetTalonControlMode(CANTalon::TalonControlMode mode);
