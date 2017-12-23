@@ -32,7 +32,8 @@ public:
 	void InitDefaultCommand();
 
 	void SetBreak(bool state);
-	void SetMotionMagicParamsParams(double cruiseVel, double accel);
+	void SetMotionMagicParams(double cruiseVel, double accel);
+	void SetMotionMagicParamsFeet(double cruiseVel, double accel);
 	void ZeroEncoders();
 
 	void Stop();
@@ -54,13 +55,16 @@ public:
 	int GetLeftClosedLoopError();
 	int GetRightClosedLoopError();
 
+	CANTalon* GetLeft() { return leftMaster_; }
+	CANTalon* GetRight() { return rightMaster_; }
+
 private:
 	// It's desirable that everything possible under private except
 	// for methods that implement subsystem capabilities
 	CANTalon* leftMaster_;
-	CANTalon* leftSlave_;
+	// CANTalon* leftSlave_;
 	CANTalon* rightMaster_;
-	CANTalon* rightSlave_;
+	// CANTalon* rightSlave_;
 
 	Mode mode_;
 

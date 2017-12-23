@@ -18,9 +18,9 @@
 // constexpr int RANGE_FINDER_PORT = 1;
 // constexpr int RANGE_FINDER_MODULE = 1;
 
-constexpr int kLeftDriveMasterId = 1;
-constexpr int kLeftDriveSlaveId = 2;
-constexpr int kRightDriveMasterId = 3;
+constexpr int kLeftDriveMasterId = 2;
+constexpr int kLeftDriveSlaveId = 3;
+constexpr int kRightDriveMasterId = 1;
 constexpr int kRightDriveSlaveId = 4;
 
 #endif  // ROBOTMAP_H

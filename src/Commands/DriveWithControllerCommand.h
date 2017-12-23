@@ -12,9 +12,6 @@ public:
 	bool IsFinished();
 	void End();
 	void Interrupted();
-
-private:
-	CheesyDriveHelper* helper_;
 };
 
 #endif  // DriveWithControllerCommand_H

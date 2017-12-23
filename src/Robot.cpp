@@ -18,7 +18,6 @@ public:
 
 		CommandBase::InitSubsystems();
 		AutoSelection::Initialize(CommandBase::oi->GetRevDigit());
-
 	}
 
 	/**

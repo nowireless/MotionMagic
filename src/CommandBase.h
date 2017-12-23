@@ -8,6 +8,7 @@
 
 #include "OI.h"
 #include "Subsystems/Chassis.h"
+#include "Subsystems/SensorSubsystem.h"
 
 /**
  * The base for all commands. All atomic commands should subclass CommandBase.
@@ -24,6 +25,7 @@ public:
 
 	// Create a single static instance of all of your subsystems
 	static std::unique_ptr<Chassis> chassis;
+	static std::unique_ptr<SensorSubsystem> sensors;
 	static std::unique_ptr<OI> oi;
 };
 

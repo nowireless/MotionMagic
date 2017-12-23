@@ -1,11 +1,11 @@
 #include "DriveWithControllerCommand.h"
+#include <Util/drive/ArcadeDriveHelper.h>
+#include <Util/Util.h>
 #include <XboxController.h>
 
 DriveWithControllerCommand::DriveWithControllerCommand() {
 	// Use Requires() here to declare subsystem dependencies
 	Requires(chassis.get());
-
-	helper_ = new CheesyDriveHelper(0.01, 0.01, 1.0);
 }
 
 // Called just before this Command runs the first time
@@ -15,16 +15,21 @@ void DriveWithControllerCommand::Initialize() {
 
 // Called repeatedly when this Command is scheduled to run
 void DriveWithControllerCommand::Execute() {
-	double throtle = oi->GetDriver()->GetX(XboxController::kLeftHand);
-	double wheel = oi->GetDriver()->GetY(XboxController::kLeftHand);
+	double move = oi->GetDriver()->GetX(XboxController::kLeftHand);
+	move *= -1.0;
+	double rotate = oi->GetDriver()->GetY(XboxController::kLeftHand);
 
-	bool quickTurn = oi->GetDriver()->GetAButton();
+	move = Util::HandleDeadband(move, 0.12);
+	rotate = Util::HandleDeadband(rotate, 0.12);
+
+//	printf("Left  Out:%f Pos:%i Vel%i\n", chassis->GetLeft()->GetOutputVoltage(), chassis->GetLeft()->GetEncPosition(), chassis->GetLeft()->GetEncVel());
+//	printf("Right Out:%f Pos:%i Vel%i\n", chassis->GetRight()->GetOutputVoltage(), chassis->GetRight()->GetEncPosition(), chassis->GetRight()->GetEncVel());
 
 	double left, right;
-	helper_->CheesyDrive(throtle, wheel, quickTurn, left, right);
+	ArcadeDriveHelper::ArcadeDrive(move, rotate, true, left, right);
 
-	chassis->SetOpenLoop(left, right);
-	//chassis->SetPrecentVelocity(left, right);
+	//chassis->SetOpenLoop(left, right);
+	chassis->SetPrecentVelocity(left, right);
 
 }
 

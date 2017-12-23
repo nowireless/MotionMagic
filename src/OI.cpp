@@ -1,5 +1,8 @@
 #include "OI.h"
 
+#include "Commands/motion/DriveDistanceCommand.h"
+
+#include <SmartDashboard/SmartDashboard.h>
 #include <WPILib.h>
 
 OI::OI() {
@@ -8,6 +11,8 @@ OI::OI() {
 	revDigit_->Display("3081");
 
 	driver_ = new XboxController(0);
+
+	SmartDashboard::PutData("MM 3ft", new DriveDistanceCommand(3.0, 3.0, 6.0, 10));
 }
 
 
