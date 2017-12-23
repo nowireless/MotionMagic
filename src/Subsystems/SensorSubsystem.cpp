@@ -3,8 +3,15 @@
 
 #include "Commands/SensorStateUpdateCommand.h"
 
-SensorSubsystem::SensorSubsystem() : Subsystem("ExampleSubsystem") {
-//	ahrs_ = new AHRS(SerialPort::kUSB);
+SensorSubsystem::SensorSubsystem() : Subsystem("SensorSubsystem") {
+	try {
+		ahrs_ = new AHRS(frc::I2C::Port::kMXP);
+	} catch (std::exception& ex) {
+		std::string what_string = ex.what();
+		std::string err_msg("Error instantiating navX MXP: " + what_string);
+		const char *p_err_msg = err_msg.c_str();
+		DriverStation::ReportError(p_err_msg);
+	}
 }
 
 void SensorSubsystem::InitDefaultCommand() {
