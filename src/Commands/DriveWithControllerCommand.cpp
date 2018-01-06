@@ -15,9 +15,13 @@ void DriveWithControllerCommand::Initialize() {
 
 // Called repeatedly when this Command is scheduled to run
 void DriveWithControllerCommand::Execute() {
-	double move = oi->GetDriver()->GetX(XboxController::kLeftHand);
+	double move = oi->GetDriver()->GetY(XboxController::kLeftHand);
 	move *= -1.0;
-	double rotate = oi->GetDriver()->GetY(XboxController::kLeftHand);
+	double rotate = oi->GetDriver()->GetX(XboxController::kLeftHand);
+	rotate *= -1.0;
+
+	SmartDashboard::PutNumber("Move", move);
+	SmartDashboard::PutNumber("Rotate", rotate);
 
 	move = Util::HandleDeadband(move, 0.12);
 	rotate = Util::HandleDeadband(rotate, 0.12);
@@ -28,8 +32,11 @@ void DriveWithControllerCommand::Execute() {
 	double left, right;
 	ArcadeDriveHelper::ArcadeDrive(move, rotate, true, left, right);
 
-	//chassis->SetOpenLoop(left, right);
-	chassis->SetPrecentVelocity(left, right);
+	SmartDashboard::PutNumber("Left", left);
+	SmartDashboard::PutNumber("Right", right);
+
+	chassis->SetOpenLoop(left, right);
+	//chassis->SetPrecentVelocity(left, right);
 
 }
 

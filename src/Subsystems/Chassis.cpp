@@ -12,8 +12,8 @@ constexpr double kWheelRadius = 3.0 / 12.0; //Feet
 constexpr double kWheelCircumference = kWheelRadius * 2.0 * M_PI;
 constexpr double kMaxVelocity = 150; //RPM
 
-constexpr int kEncoderCount = 360;
-constexpr double kGearRatio = 15.0/36.0; // Encdoer -> Wheel ratio
+constexpr int kEncoderCount = 120;
+constexpr double kGearRatio = 1.0; // Encdoer -> Wheel ratio
 constexpr double kEncoderCodesPerRev = kEncoderCount * 1.0 / kGearRatio;
 
 constexpr int kDefaultProfileSlot = 0;
@@ -31,6 +31,7 @@ constexpr double kCloseLoopRampRate = 240;
 
 Chassis::Chassis() : Subsystem("Chassis") {
 	using FeedbackDevice = CANTalon::FeedbackDevice;
+	using TalonControlMode = CANTalon::TalonControlMode;
 	printf("[Chassis] Initializing\n");
 
 	// Left Master
@@ -44,12 +45,11 @@ Chassis::Chassis() : Subsystem("Chassis") {
 	leftMaster_->ConfigPeakOutputVoltage(+12.0f, -12.0f);
 
 	leftMaster_->SelectProfileSlot(0);
-	leftMaster_->SetF(2.84 * 15.0/36.0);
-	leftMaster_->SetP(0.75);
+	leftMaster_->SetF(0);
+	leftMaster_->SetP(0);
 	leftMaster_->SetI(0);
 	leftMaster_->SetD(0);
 	leftMaster_->SetCloseLoopRampRate(kCloseLoopRampRate);
-
 
 	rightMaster_ = new CANTalon(kRightDriveMasterId);
 	rightMaster_->SetFeedbackDevice(FeedbackDevice::QuadEncoder);
@@ -61,11 +61,24 @@ Chassis::Chassis() : Subsystem("Chassis") {
 	rightMaster_->ConfigPeakOutputVoltage(+12.0f, -12.0f);
 
 	rightMaster_->SelectProfileSlot(0);
-	rightMaster_->SetF(2.84 * 15.0/36.0);
-	rightMaster_->SetP(0.75);
+	rightMaster_->SetF(0);
+	rightMaster_->SetP(0);
 	rightMaster_->SetI(0);
 	rightMaster_->SetD(0);
 	rightMaster_->SetCloseLoopRampRate(kCloseLoopRampRate);
+
+	leftSlave_ = new CANTalon(kLeftDriveSlaveId);
+	leftSlave_ ->ConfigNominalOutputVoltage(+0.0f, -0.0f);
+	leftSlave_ ->ConfigPeakOutputVoltage(+12.0f, -12.0f);
+	leftSlave_->SetTalonControlMode(TalonControlMode::kFollowerMode);
+	leftSlave_->Set(leftMaster_->GetDeviceID());
+
+	rightSlave_ = new CANTalon(kRightDriveSlaveId);
+	rightSlave_  ->ConfigNominalOutputVoltage(+0.0f, -0.0f);
+	rightSlave_ ->ConfigPeakOutputVoltage(+12.0f, -12.0f);
+	rightSlave_->SetTalonControlMode(TalonControlMode::kFollowerMode);
+	rightSlave_->Set(rightMaster_->GetDeviceID());
+
 
 	SetDefaultMotionMagicParams();
 

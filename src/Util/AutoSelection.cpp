@@ -22,6 +22,7 @@ static std::map<std::string,AutoSelection::Auto> name2Auto;
 AutoSelection* AutoSelection::instance = nullptr;
 
 void AutoSelection::Initialize(RevDigit* revDigit) {
+
 	if(instance == nullptr) {
 		instance = new AutoSelection(revDigit);
 	} else {
@@ -57,10 +58,15 @@ AutoSelection::AutoSelection(RevDigit* revDigit) {
 	{
 		std::lock_guard<std::mutex> lock(selectedAutoMutex);
 		selectedAuto = (Auto) frc::Preferences::GetInstance()->GetInt("selected_auto", DefaultAuto);
+		if(selectedAuto < DefaultAuto || LastAuto <= selectedAuto) {
+			printf("Saved selected auto is of range, setting to default\n");
+			selectedAuto = DefaultAuto;
+		}
 	}
 }
 
 void AutoSelection::Init() {
+	printf("[AutoSelection] Initializing\n");
 	auto2cmd[DefaultAuto] = new PrintCommand("Doing nothing");
 	// auto2cmd[LoadingStationAutoBlue] = new LoadingStationCommandGroup(true);
 	// auto2cmd[LoadingStationAutoRed] = new LoadingStationCommandGroup(false);
@@ -74,11 +80,13 @@ void AutoSelection::Init() {
 	}
 
 	t = std::thread(WorkerThread, this);
+	printf("[AutoSelection] Ready\n");
 }
 
 AutoSelection::~AutoSelection() {}
 
 void AutoSelection::WorkerThread(AutoSelection* i) {
+	printf("[AutoSelection] Worker thread starting\n");
 	while(true) {
 		if(i->revDigit->GetA()) {
 			//Goto next auto

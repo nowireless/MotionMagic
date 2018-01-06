@@ -16,8 +16,8 @@
  *
  * This function lets you directly provide joystick values from any source.
  *
- * @param moveValue     The value to use for fowards/backwards
- * @param rotateValue   The value to use for the rotate right/left
+ * @param moveValue     Positive for forwards/Negative for backwards
+ * @param rotateValue   Positive for left/Negative for right
  * @param squaredInputs If set, increases the sensitivity at low speeds
  */
 void ArcadeDriveHelper::ArcadeDrive(double moveValue, double rotateValue,

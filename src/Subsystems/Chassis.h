@@ -59,6 +59,9 @@ private:
 	CANTalon* leftMaster_;
 	CANTalon* rightMaster_;
 
+	CANTalon* leftSlave_;
+	CANTalon* rightSlave_;
+
 	void SetClosedLoopParams(CANTalon* talon, ClosedLoopParams params);
 	void SetTalonControlMode(CANTalon::TalonControlMode mode);
 };

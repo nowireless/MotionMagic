@@ -19,6 +19,9 @@ void SensorStateUpdateCommand::Execute() {
 	SmartDashboard::PutNumber("Chassis Left Encoder Rate", chassis->GetLeftRate());
 	SmartDashboard::PutNumber("Chassis Right Encoder Rate", chassis->GetRightRate());
 
+	SmartDashboard::PutNumber("Chassis Left Encoder Rate RPM", chassis->GetLeft()->GetSpeed());
+	SmartDashboard::PutNumber("Chassis Right Encoder Rate RPM", chassis->GetRight()->GetSpeed());
+
 }
 
 // Make this return true when this Command no longer needs to run execute()
